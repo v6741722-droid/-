@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>คุณส่งคลิปให้ใครบ่อยแค่ไหน?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Mitr:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #F7F1E5;
+      --card: #FFFFFF;
+      --line: #D8C3A5;
+      --accent: #E8B4B8;
+      --accent-dark: #d9969c;
+      --text: #3D2B1F;
+      --muted: #9B7B6A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #F7F1E5;
+      min-height: 100vh;
+      padding: 24px 16px;
+      color: #3D2B1F;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    /* ===== SCREEN SYSTEM ===== */
+    #app {
+      width: 100%;
+      max-width: 520px;
+      position: relative;
+    }
+
+    .screen {
+      display: none;
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .screen.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .screen.exit-left {
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+    .screen.enter-right {
+      opacity: 0;
+      transform: translateX(40px);
+    }
+    .screen.enter-left {
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 4px 32px rgba(100,60,40,0.12);
+      padding: 36px 28px;
+      border: 1px solid #E8D8C4;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 600px) {
+      body {
+        align-items: center;
+        min-height: 100vh;
+        padding: 40px 24px;
+      }
+      .card {
+        padding: 44px 40px;
+      }
+    }
+
+    /* ===== START ===== */
+    .start-emoji {
+      font-size: 64px;
+      text-align: center;
+      display: block;
+      margin-bottom: 18px;
+      animation: floatEmoji 3s ease-in-out infinite;
+    }
+    @keyframes floatEmoji {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .start-title {
+      font-family: 'Mitr', sans-serif;
+      font-size: 26px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    @media (min-width: 600px) {
+      .start-title { font-size: 30px; }
+    }
+    .start-sub {
+      font-size: 15px;
+      color: #9B7B6A;
+      text-align: center;
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+    .tags {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      background: #F7F1E5;
+      border: 1px solid #D8C3A5;
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 13px;
+      color: #9B7B6A;
+    }
+
+    /* ===== PROGRESS ===== */
+    .prog-wrap { margin-bottom: 24px; }
+    .prog-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #9B7B6A;
+      margin-bottom: 8px;
+    }
+    .prog-bg {
+      height: 7px;
+      background: #F0E8D8;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #E8B4B8, #d9969c);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      width: 3%;
+    }
+
+    /* ===== QUESTION ===== */
+    .q-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: #d9969c;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .q-text {
+      font-family: 'Mitr', sans-serif;
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      min-height: 56px;
+    }
+    @media (min-width: 600px) {
+      .q-text { font-size: 22px; }
+    }
+    .choices { display: flex; flex-direction: column; gap: 10px; }
+
+    .choice-btn {
+      background: #F7F1E5;
+      border: 2px solid #D8C3A5;
+      border-radius: 14px;
+      padding: 15px 18px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 15px;
+      color: #3D2B1F;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.5;
+      width: 100%;
+      -webkit-tap-highlight-color: rgba(232,180,184,0.3);
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .choice-btn:hover {
+      background: #f0e8d8;
+      border-color: #c9a890;
+    }
+    .choice-btn.selected {
+      background: #E8B4B8;
+      border-color: #d9969c;
+      color: #fff;
+      transform: scale(1.01);
+    }
+    .choice-btn:active { opacity: 0.75; }
+
+    /* ===== BACK BUTTON ===== */
+    .back-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .back-btn {
+      background: none;
+      border: 1.5px solid #D8C3A5;
+      border-radius: 10px;
+      padding: 7px 14px 7px 10px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 13px;
+      color: #9B7B6A;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .back-btn:hover {
+      background: #F7F1E5;
+      color: #3D2B1F;
+    }
+    .back-btn:active { opacity: 0.7; }
+    .back-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+    /* ===== RESULT ===== */
+    .res-emoji {
+      font-size: 60px;
+      text-align: center;
+      display: block;
+      margin-bottom: 14px;
+      animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .res-name {
+      font-family: 'Mitr', sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 600px) {
+      .res-name { font-size: 32px; }
+    }
+    .res-badge {
+      background: linear-gradient(135deg, #E8B4B8, #d9969c);
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      display: block;
+      margin: 0 auto 22px;
+      width: fit-content;
+    }
+
+    /* วงกลม % */
+    .ring-wrap {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .ring-svg {
+      display: block;
+      margin: 0 auto;
+      transform: rotate(-90deg);
+    }
+    .ring-track { fill: none; stroke: #EDE0CC; stroke-width: 8; }
+    .ring-fill {
+      fill: none;
+      stroke: #d9969c;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 220;
+      transition: stroke-dashoffset 1s ease;
+    }
+    .ring-num {
+      font-family: 'Mitr', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    .ring-sub { font-size: 12px; color: #9B7B6A; margin-top: 4px; }
+
+    /* Score bars */
+    .score-bars {
+      margin-bottom: 20px;
+    }
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .score-label {
+      font-size: 12px;
+      color: #9B7B6A;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .score-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: #F0E8D8;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0%;
+      transition: width 1s ease 0.2s;
+    }
+    .score-bar-fill.f { background: linear-gradient(90deg, #F4C5A0, #e8a070); }
+    .score-bar-fill.t { background: linear-gradient(90deg, #E8B4B8, #d9969c); }
+    .score-bar-fill.r { background: linear-gradient(90deg, #B4D4E8, #7ab5d9); }
+    .score-pct {
+      font-size: 12px;
+      color: #9B7B6A;
+      width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .res-desc {
+      font-size: 15px;
+      color: #9B7B6A;
+      text-align: center;
+      line-height: 1.75;
+      padding: 18px;
+      background: #F7F1E5;
+      border-radius: 14px;
+      border: 1px solid #D8C3A5;
+      margin-bottom: 24px;
+    }
+    hr { border: none; border-top: 1px solid #E8D8C4; margin: 20px 0; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      font-family: 'Mitr', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      text-align: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn:active { transform: scale(0.98); opacity: 0.85; }
+    .btn-primary {
+      background: linear-gradient(135deg, #E8B4B8, #d9969c);
+      color: #fff;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #D8C3A5;
+      color: #9B7B6A;
+      margin-top: 12px;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #3D2B1F;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      white-space: nowrap;
+      z-index: 999;
+      transition: transform 0.3s ease;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- ========== START ========== -->
+<div id="s-start" class="screen active">
+  <div class="card">
+    <span class="start-emoji">📲</span>
+    <h1 class="start-title">คุณส่งคลิปให้ใครบ่อยแค่ไหน?</h1>
+    <p class="start-sub">ตอบให้ซื่อ ๆ นะ ไม่มีใครรู้หรอก 🙈</p>
+    <div class="tags">
+      <span class="tag">📋 30 ข้อ</span>
+      <span class="tag">⏱ ~3 นาที</span>
+      <span class="tag">🏆 15 ผลลัพธ์</span>
+    </div>
+    <button class="btn btn-primary" onclick="startQuiz()">เริ่มทำแบบทดสอบ ✨</button>
+  </div>
+</div>
+
+<!-- ========== QUESTION ========== -->
+<div id="s-question" class="screen">
+  <div class="card">
+    <div class="back-row">
+      <button class="back-btn" id="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        ย้อนกลับ
+      </button>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-top">
+        <span>คำถาม</span>
+        <span id="prog-text">1 / 30</span>
+      </div>
+      <div class="prog-bg">
+        <div class="prog-fill" id="prog-fill"></div>
+      </div>
+    </div>
+    <div class="q-num" id="q-num">ข้อที่ 1</div>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="choices"></div>
+  </div>
+</div>
+
+<!-- ========== RESULT ========== -->
+<div id="s-result" class="screen">
+  <div class="card">
+    <span class="res-emoji" id="res-emoji">🎯</span>
+    <div class="res-name" id="res-name"></div>
+    <div class="res-badge" id="res-badge"></div>
+    <div class="ring-wrap">
+      <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+        <circle class="ring-track" cx="45" cy="45" r="35"/>
+        <circle class="ring-fill" id="ring-fill" cx="45" cy="45" r="35"/>
+      </svg>
+      <div class="ring-num" id="ring-num">0%</div>
+      <div class="ring-sub">ระดับความตรงกับประเภทนี้</div>
+    </div>
+    <div class="score-bars" id="score-bars">
+      <div class="score-row">
+        <span class="score-label">🔁 ความถี่</span>
+        <div class="score-bar-bg"><div class="score-bar-fill f" id="bar-f"></div></div>
+        <span class="score-pct" id="pct-f">0%</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">🎯 เป้าหมาย</span>
+        <div class="score-bar-bg"><div class="score-bar-fill t" id="bar-t"></div></div>
+        <span class="score-pct" id="pct-t">0%</span>
+      </div>
+      <div class="score-row">
+        <span class="score-label">💬 รีแอค</span>
+        <div class="score-bar-bg"><div class="score-bar-fill r" id="bar-r"></div></div>
+        <span class="score-pct" id="pct-r">0%</span>
+      </div>
+    </div>
+    <div class="res-desc" id="res-desc"></div>
+    <hr />
+    <button class="btn btn-primary" onclick="doShare()">📋 คัดลอกผลลัพธ์</button>
+    <button class="btn btn-outline" onclick="restartQuiz()">🔄 เล่นใหม่</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<div class="toast" id="toast">คัดลอกแล้ว! ✓</div>
+
+<script>
+var Q = [
+  { text: "เจอคลิปที่ใช่จัด คุณจะ…", c: [
+    { text: "เลื่อนผ่าน", F:0,T:0,R:0 },
+    { text: "กดไลก์", F:1,T:0,R:0 },
+    { text: "เซฟไว้", F:1,T:0,R:0 },
+    { text: "ส่งให้ใครบางคน", F:2,T:1,R:0 }
+  ]},
+  { text: "เวลาขำมาก ๆ ปกติ…", c: [
+    { text: "ขำคนเดียว", F:0,T:0,R:0 },
+    { text: "ส่งให้คนเดิม", F:2,T:2,R:0 },
+    { text: "ส่งหลายคน", F:2,T:0,R:0 },
+    { text: "ไม่ส่ง", F:0,T:0,R:0 }
+  ]},
+  { text: "คลิปที่ตรงกับใครบางคน คุณจะ…", c: [
+    { text: "เลื่อนผ่าน", F:0,T:0,R:0 },
+    { text: "แคปไว้", F:1,T:0,R:0 },
+    { text: "ส่งให้คนนั้น", F:2,T:2,R:0 },
+    { text: "ส่งในกลุ่ม", F:1,T:0,R:0 }
+  ]},
+  { text: "ฟีล \"ต้องส่งให้คนนั้น\" เกิดบ่อยแค่ไหน", c: [
+    { text: "ไม่เคย", F:0,T:0,R:0 },
+    { text: "นาน ๆ ที", F:0,T:1,R:0 },
+    { text: "บ่อย", F:0,T:2,R:0 },
+    { text: "ประจำ", F:0,T:3,R:0 }
+  ]},
+  { text: "ถ้าเขาไม่ตอบ", c: [
+    { text: "ลืมไปเลย", F:0,T:0,R:0 },
+    { text: "แอบเช็ค", F:0,T:0,R:1 },
+    { text: "ส่งเพิ่ม", F:1,T:0,R:2 },
+    { text: "ทักไปแซว", F:0,T:0,R:3 }
+  ]},
+  { text: "หน้าแชทคุณส่วนใหญ่เป็น…", c: [
+    { text: "เงียบ ๆ", F:0,T:0,R:0 },
+    { text: "คุยบ้าง", F:1,T:0,R:0 },
+    { text: "มีคลิปเรื่อย ๆ", F:2,T:0,R:0 },
+    { text: "คลิปล้วน", F:3,T:0,R:0 }
+  ]},
+  { text: "คุณเคยเก็บคลิปรอใครไหม", c: [
+    { text: "ไม่เคย", F:0,T:0,R:0 },
+    { text: "เคยบ้าง", F:0,T:1,R:0 },
+    { text: "บ่อย", F:0,T:2,R:0 },
+    { text: "ประจำ", F:0,T:3,R:0 }
+  ]},
+  { text: "เลือกคนส่งคลิปยังไง", c: [
+    { text: "ไม่ค่อยเลือก", F:0,T:0,R:0 },
+    { text: "เลือกตามเรื่อง", F:0,T:1,R:0 },
+    { text: "มีคนหลัก", F:0,T:2,R:0 },
+    { text: "มีอยู่คนเดียว", F:0,T:3,R:0 }
+  ]},
+  { text: "ถ้าเขาส่งคลิปกลับมา", c: [
+    { text: "ดูเฉย ๆ", F:0,T:0,R:1 },
+    { text: "ตอบเป็นข้อความ", F:0,T:0,R:2 },
+    { text: "ส่งคลิปสวน", F:1,T:0,R:3 },
+    { text: "เปิดสงครามคลิป", F:2,T:0,R:4 }
+  ]},
+  { text: "คุณมักส่งคลิปช่วงไหน", c: [
+    { text: "แทบไม่ส่ง", F:0,T:0,R:0 },
+    { text: "ว่าง ๆ", F:1,T:0,R:0 },
+    { text: "บ่อย", F:2,T:0,R:0 },
+    { text: "แทบทั้งวัน", F:3,T:0,R:0 }
+  ]},
+  { text: "เจอคลิปยาว ๆ", c: [
+    { text: "ไม่ส่ง", F:0,T:0,R:0 },
+    { text: "ส่งเฉพาะบางคน", F:0,T:1,R:0 },
+    { text: "ส่งให้คนเดิม", F:2,T:2,R:0 },
+    { text: "เลื่อนผ่าน", F:0,T:0,R:0 }
+  ]},
+  { text: "ถ้าคลิปเป็นมุกที่รู้กันแค่บางคน", c: [
+    { text: "เก็บไว้", F:0,T:1,R:0 },
+    { text: "ส่งให้คนเดียว", F:0,T:2,R:0 },
+    { text: "ส่งในกลุ่ม", F:0,T:0,R:0 },
+    { text: "ไม่ส่ง", F:0,T:0,R:0 }
+  ]},
+  { text: "คุณเคยย้อนหาคลิปเก่าส่งไหม", c: [
+    { text: "ไม่เคย", F:0,T:0,R:0 },
+    { text: "เคย", F:1,T:0,R:0 },
+    { text: "บ่อย", F:2,T:0,R:0 },
+    { text: "ทำประจำ", F:3,T:0,R:0 }
+  ]},
+  { text: "เวลาเหงา", c: [
+    { text: "ดูเฉย ๆ", F:0,T:0,R:0 },
+    { text: "เลื่อนยาว", F:1,T:0,R:0 },
+    { text: "ส่งคลิป", F:2,T:0,R:0 },
+    { text: "ทักพร้อมคลิป", F:2,T:0,R:2 }
+  ]},
+  { text: "ถ้าเขาดูแล้วไม่ตอบ", c: [
+    { text: "ช่างมัน", F:0,T:0,R:0 },
+    { text: "คิดนิดหน่อย", F:0,T:0,R:1 },
+    { text: "ส่งอีก", F:1,T:0,R:2 },
+    { text: "ทักไปแซว", F:0,T:0,R:3 }
+  ]},
+  { text: "คุณเคยส่งผิดคนไหม", c: [
+    { text: "ไม่เคย", F:0,T:2,R:0 },
+    { text: "เคย", F:0,T:1,R:0 },
+    { text: "บ่อย", F:0,T:0,R:0 },
+    { text: "จำไม่ได้", F:0,T:0,R:0 }
+  ]},
+  { text: "คุณมี \"คนแรกที่นึกถึง\" ไหม", c: [
+    { text: "ไม่มี", F:0,T:0,R:0 },
+    { text: "มีบ้าง", F:0,T:1,R:0 },
+    { text: "มีชัด", F:0,T:2,R:0 },
+    { text: "คนเดียวเท่านั้น", F:0,T:3,R:0 }
+  ]},
+  { text: "เวลาดูคลิปเศร้า", c: [
+    { text: "ดูเฉย ๆ", F:0,T:0,R:0 },
+    { text: "เซฟไว้", F:1,T:0,R:0 },
+    { text: "ส่งให้คนพิเศษ", F:0,T:2,R:0 },
+    { text: "เลื่อนผ่าน", F:0,T:0,R:0 }
+  ]},
+  { text: "ถ้าเห็นว่าเขาออนอยู่", c: [
+    { text: "ไม่สน", F:0,T:0,R:0 },
+    { text: "แอบดู", F:0,T:0,R:1 },
+    { text: "ส่งคลิป", F:1,T:0,R:2 },
+    { text: "ทักทันที", F:0,T:0,R:3 }
+  ]},
+  { text: "คุณเคยส่งคลิปติดกันหลายอันไหม", c: [
+    { text: "ไม่เคย", F:0,T:0,R:0 },
+    { text: "นาน ๆ", F:1,T:0,R:0 },
+    { text: "บ่อย", F:2,T:0,R:0 },
+    { text: "ประจำ", F:3,T:0,R:0 }
+  ]},
+  { text: "ถ้าอีกฝ่ายไม่ค่อยส่งกลับ", c: [
+    { text: "หยุดส่ง", F:0,T:0,R:0 },
+    { text: "ลดลง", F:0,T:0,R:1 },
+    { text: "ส่งเหมือนเดิม", F:1,T:0,R:2 },
+    { text: "ส่งหนักกว่าเดิม", F:2,T:0,R:3 }
+  ]},
+  { text: "คุณคิดถึงใครตอนดูคลิปไหม", c: [
+    { text: "ไม่เลย", F:0,T:0,R:0 },
+    { text: "บางครั้ง", F:0,T:1,R:0 },
+    { text: "บ่อย", F:0,T:2,R:0 },
+    { text: "ตลอด", F:0,T:3,R:0 }
+  ]},
+  { text: "คลิปน่ารัก ๆ", c: [
+    { text: "ดูเฉย ๆ", F:0,T:0,R:0 },
+    { text: "เซฟ", F:1,T:0,R:0 },
+    { text: "ส่งให้คนเดิม", F:0,T:2,R:0 },
+    { text: "ลงสตอรี่", F:1,T:0,R:0 }
+  ]},
+  { text: "คุณเคยรอให้เขาออนก่อนส่งไหม", c: [
+    { text: "ไม่เคย", F:0,T:0,R:0 },
+    { text: "เคย", F:0,T:0,R:1 },
+    { text: "บ่อย", F:0,T:0,R:2 },
+    { text: "ประจำ", F:0,T:0,R:3 }
+  ]},
+  { text: "ถ้าเขาหายไป", c: [
+    { text: "ไม่สน", F:0,T:0,R:0 },
+    { text: "สงสัยนิดหน่อย", F:0,T:0,R:1 },
+    { text: "ส่งคลิปหา", F:1,T:0,R:2 },
+    { text: "ทักหา", F:0,T:0,R:3 }
+  ]},
+  { text: "คุณส่งคลิปเพื่ออะไร", c: [
+    { text: "ไม่ค่อยส่ง", F:0,T:0,R:0 },
+    { text: "ขำ", F:1,T:0,R:0 },
+    { text: "แชร์", F:2,T:0,R:0 },
+    { text: "เพราะนึกถึงใครบางคน", F:0,T:2,R:0 }
+  ]},
+  { text: "จำนวนคนที่คุณส่งประจำ", c: [
+    { text: "ไม่มี", F:0,T:0,R:0 },
+    { text: "หลายคน", F:0,T:0,R:0 },
+    { text: "2-3 คน", F:0,T:1,R:0 },
+    { text: "คนเดียว", F:0,T:3,R:0 }
+  ]},
+  { text: "คุณเคยย้อนดูคลิปที่ตัวเองส่งไหม", c: [
+    { text: "ไม่เคย", F:0,T:0,R:0 },
+    { text: "บางครั้ง", F:0,T:0,R:1 },
+    { text: "บ่อย", F:0,T:0,R:2 },
+    { text: "ตลอด", F:0,T:0,R:3 }
+  ]},
+  { text: "ถ้ามีคนส่งคลิปมาเยอะ", c: [
+    { text: "ไม่ตอบ", F:0,T:0,R:0 },
+    { text: "ตอบบ้าง", F:0,T:0,R:1 },
+    { text: "ส่งกลับ", F:1,T:0,R:2 },
+    { text: "ส่งรัว", F:2,T:0,R:3 }
+  ]},
+  { text: "คุณดูคลิปแนวไหนมากสุด", c: [
+    { text: "ตลก", F:0,T:0,R:0 },
+    { text: "ความรัก", F:0,T:0,R:0 },
+    { text: "เกม", F:0,T:0,R:0 },
+    { text: "สุ่มไปเรื่อย ๆ", F:0,T:0,R:0 }
+  ]}
+];
+
+/* ===== 15 RESULTS ===== */
+var RESULTS = [
+  {
+    id:"loop-sender", name:"Loop Sender", emoji:"🔄",
+    desc:"แชทคุณคือสงครามคลิปไม่จบ",
+    priority: 1,
+    match: function(F,T,R){ return F>=70 && R>=70; }
+  },
+  {
+    id:"target-locked", name:"Target Locked", emoji:"🎯",
+    desc:"คุณมีคนเดียวในหัวจริง ๆ เจอคลิป = นึกถึงเขาทันที",
+    priority: 2,
+    match: function(F,T,R){ return T>=70 && F>=40; }
+  },
+  {
+    id:"hidden-crush", name:"Hidden Crush Mode", emoji:"💘",
+    desc:"พฤติกรรมคุณชัดมากว่าคุณโฟกัสใครบางคนเป็นพิเศษ",
+    priority: 3,
+    match: function(F,T,R){ return T>=70 && R>=60; }
+  },
+  {
+    id:"reactive-sender", name:"Reactive Sender", emoji:"⚡",
+    desc:"คุณตอบไว และพร้อมส่งกลับเสมอ",
+    priority: 4,
+    match: function(F,T,R){ return R>=75; }
+  },
+  {
+    id:"spam-machine", name:"Spam Machine", emoji:"📨",
+    desc:"คุณส่งทุกอย่างที่เจอ คลิปคือภาษาหลักของคุณ",
+    priority: 5,
+    match: function(F,T,R){ return F>=75 && T<40; }
+  },
+  {
+    id:"one-sided", name:"One-Sided Sender", emoji:"📤",
+    desc:"คุณเป็นฝ่ายส่งมากกว่าอีกฝ่ายชัดเจน",
+    priority: 6,
+    match: function(F,T,R){ return F>=50 && R<=30; }
+  },
+  {
+    id:"conversation-builder", name:"Conversation Builder", emoji:"💬",
+    desc:"คุณใช้คลิปเป็นตัวเปิดบทสนทนา",
+    priority: 7,
+    match: function(F,T,R){ return R>=65 && F>=35 && F<=65; }
+  },
+  {
+    id:"multi-target", name:"Multi-Target", emoji:"🎪",
+    desc:"คุณมีหลายคนในหัว ไม่ได้โฟกัสแค่คนเดียว",
+    priority: 8,
+    match: function(F,T,R){ return T>=40 && T<=60 && F>=50; }
+  },
+  {
+    id:"selective-sender", name:"Selective Sender", emoji:"🎁",
+    desc:"คุณไม่ส่งบ่อย แต่ส่งทีมีความหมาย",
+    priority: 9,
+    match: function(F,T,R){ return F<=40 && T>=50; }
+  },
+  {
+    id:"ghost-sharer", name:"Ghost Sharer", emoji:"👻",
+    desc:"คุณส่งแล้วจบ ไม่ตาม ไม่รอ",
+    priority: 10,
+    match: function(F,T,R){ return R<=25 && F>=30; }
+  },
+  {
+    id:"hoarder-sender", name:"Hoarder Sender", emoji:"📦",
+    desc:"คุณเก็บคลิปไว้เยอะ รอส่งให้ใครบางคน",
+    priority: 11,
+    match: function(F,T,R){ return F<=35 && T>=40 && T<=60; }
+  },
+  {
+    id:"mood-sender", name:"Mood Sender", emoji:"🌊",
+    desc:"คุณส่งตามอารมณ์ล้วน ๆ",
+    priority: 12,
+    match: function(F,T,R){ return R>=40 && R<=65 && F>=30 && F<=65; }
+  },
+  {
+    id:"lazy-sender", name:"Lazy Sender", emoji:"🛋️",
+    desc:"คุณไม่ค่อยส่งคลิปเท่าไหร่",
+    priority: 13,
+    match: function(F,T,R){ return F<=20 && R<=30; }
+  },
+  {
+    id:"lowkey-watcher", name:"Lowkey Watcher", emoji:"👀",
+    desc:"คุณดูเยอะ แต่ไม่ค่อยส่ง",
+    priority: 14,
+    match: function(F,T,R){ return F<=25; }
+  },
+  {
+    id:"balanced-sender", name:"Balanced Sender", emoji:"⚖️",
+    desc:"คุณส่งแบบมีสมดุล ไม่มากไม่น้อย",
+    priority: 99,
+    match: function(F,T,R){ return true; }
+  }
+];
+
+/* คำนวณ max */
+var MAX = (function(){
+  var mF=0,mT=0,mR=0;
+  for(var i=0;i<Q.length;i++){
+    var f=0,t=0,r=0;
+    for(var j=0;j<Q[i].c.length;j++){
+      if(Q[i].c[j].F>f) f=Q[i].c[j].F;
+      if(Q[i].c[j].T>t) t=Q[i].c[j].T;
+      if(Q[i].c[j].R>r) r=Q[i].c[j].R;
+    }
+    mF+=f; mT+=t; mR+=r;
+  }
+  return {F:mF,T:mT,R:mR};
+})();
+
+var score={F:0,T:0,R:0};
+var cur=0;
+var locked=false;
+var lastResult=null;
+/* ansHistory: array of {score snapshot, chosen index} for back navigation */
+var ansHistory=[];
+
+/* ===== TRANSITION ===== */
+function transitionTo(fromId, toId, direction) {
+  var fromEl = document.getElementById(fromId);
+  var toEl   = document.getElementById(toId);
+
+  fromEl.classList.add(direction === 'forward' ? 'exit-left' : 'exit-right');
+
+  setTimeout(function(){
+    fromEl.style.display = 'none';
+    fromEl.classList.remove('active','exit-left','exit-right');
+    fromEl.style.opacity = '';
+    fromEl.style.transform = '';
+
+    toEl.style.display = 'block';
+    toEl.classList.add(direction === 'forward' ? 'enter-right' : 'enter-left');
+    // force reflow
+    toEl.offsetHeight;
+    toEl.classList.remove('enter-right','enter-left');
+    toEl.classList.add('active');
+    window.scrollTo(0,0);
+  }, 300);
+}
+
+function goTo(id) {
+  var ids = ['s-start','s-question','s-result'];
+  for(var i=0;i<ids.length;i++){
+    var el = document.getElementById(ids[i]);
+    el.style.display = (ids[i]===id) ? 'block' : 'none';
+    el.classList.toggle('active', ids[i]===id);
+  }
+  window.scrollTo(0,0);
+}
+
+function startQuiz(){
+  score={F:0,T:0,R:0}; cur=0; locked=false; ansHistory=[];
+  transitionTo('s-start','s-question','forward');
+  setTimeout(renderQ, 310);
+}
+
+function goBack(){
+  if(cur === 0){
+    transitionTo('s-question','s-start','back');
+    return;
+  }
+  var prev = ansHistory.pop();
+  score = {F: prev.scoreF, T: prev.scoreT, R: prev.scoreR};
+  cur--;
+  locked=false;
+  renderQ(true);
+}
+
+function renderQ(isBack){
+  var q=Q[cur], n=cur+1;
+  document.getElementById('prog-text').textContent = n+' / '+Q.length;
+  document.getElementById('prog-fill').style.width = ((n/Q.length)*100)+'%';
+  document.getElementById('q-num').textContent = 'ข้อที่ '+n;
+
+  /* back button label */
+  document.getElementById('back-btn').textContent = '';
+  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 24 24');
+  svg.style.cssText='width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;vertical-align:middle;margin-right:4px';
+  var poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+  poly.setAttribute('points','15 18 9 12 15 6');
+  svg.appendChild(poly);
+  document.getElementById('back-btn').appendChild(svg);
+  document.getElementById('back-btn').appendChild(document.createTextNode(cur===0 ? 'หน้าหลัก' : 'ย้อนกลับ'));
+
+  /* animate question text */
+  var qtEl = document.getElementById('q-text');
+  qtEl.style.opacity='0';
+  qtEl.style.transform = isBack ? 'translateX(20px)' : 'translateX(-20px)';
+  qtEl.textContent = q.text;
+  setTimeout(function(){
+    qtEl.style.transition='opacity 0.25s ease, transform 0.25s ease';
+    qtEl.style.opacity='1';
+    qtEl.style.transform='translateX(0)';
+    setTimeout(function(){ qtEl.style.transition=''; },250);
+  }, 20);
+
+  var wrap=document.getElementById('choices');
+  wrap.innerHTML='';
+  wrap.style.opacity='0';
+  for(var i=0;i<q.c.length;i++){
+    (function(ch, idx){
+      var b=document.createElement('button');
+      b.className='choice-btn';
+      b.textContent=ch.text;
+      b.onclick=function(){
+        if(locked) return;
+        locked=true;
+        b.className='choice-btn selected';
+        /* save state for back */
+        ansHistory.push({scoreF:score.F, scoreT:score.T, scoreR:score.R});
+        score.F+=ch.F; score.T+=ch.T; score.R+=ch.R;
+        setTimeout(function(){
+          cur++;
+          locked=false;
+          if(cur<Q.length){ renderQ(false); }
+          else { showResult(); }
+        },280);
+      };
+      wrap.appendChild(b);
+    })(q.c[i], i);
+  }
+  setTimeout(function(){
+    wrap.style.transition='opacity 0.25s ease';
+    wrap.style.opacity='1';
+    setTimeout(function(){ wrap.style.transition=''; },250);
+  }, 60);
+}
+
+function pct(v,m){ return m===0?0:Math.round((v/m)*100); }
+
+function showResult(){
+  var Fp=pct(score.F,MAX.F), Tp=pct(score.T,MAX.T), Rp=pct(score.R,MAX.R);
+
+  /* Sort results by priority, pick first match */
+  var sorted = RESULTS.slice().sort(function(a,b){ return a.priority-b.priority; });
+  var matched = null;
+  for(var i=0;i<sorted.length;i++){
+    if(sorted[i].match(Fp,Tp,Rp)){ matched=sorted[i]; break; }
+  }
+
+  /* compute display % */
+  var dp;
+  if(matched.id === 'balanced-sender'){
+    dp = Math.round((Fp+Tp+Rp)/3);
+  } else if(matched.id === 'target-locked' || matched.id === 'hidden-crush' || matched.id === 'selective-sender' || matched.id === 'hoarder-sender' || matched.id === 'multi-target'){
+    dp = Math.round((Tp + (matched.id==='target-locked'?Fp:Rp)) / 2);
+  } else if(matched.id === 'spam-machine' || matched.id === 'one-sided' || matched.id === 'lowkey-watcher' || matched.id === 'lazy-sender'){
+    dp = Fp;
+  } else if(matched.id === 'reactive-sender' || matched.id === 'conversation-builder' || matched.id === 'ghost-sharer'){
+    dp = Rp;
+  } else {
+    dp = Math.max(Fp,Tp,Rp);
+  }
+  dp = Math.max(42, Math.min(99, dp));
+  lastResult={matched:matched, dp:dp, Fp:Fp, Tp:Tp, Rp:Rp};
+
+  document.getElementById('res-emoji').textContent=matched.emoji;
+  document.getElementById('res-name').textContent=matched.name;
+  document.getElementById('res-badge').textContent='คุณเป็นแบบนี้ '+dp+'%';
+  document.getElementById('res-desc').textContent=matched.desc;
+  document.getElementById('ring-num').textContent=dp+'%';
+  document.getElementById('ring-fill').style.strokeDashoffset='220';
+
+  transitionTo('s-question','s-result','forward');
+
+  setTimeout(function(){
+    document.getElementById('ring-fill').style.strokeDashoffset = 220-(dp/100)*220;
+    document.getElementById('bar-f').style.width = Fp+'%';
+    document.getElementById('bar-t').style.width = Tp+'%';
+    document.getElementById('bar-r').style.width = Rp+'%';
+    document.getElementById('pct-f').textContent = Fp+'%';
+    document.getElementById('pct-t').textContent = Tp+'%';
+    document.getElementById('pct-r').textContent = Rp+'%';
+  }, 400);
+}
+
+function doShare(){
+  if(!lastResult) return;
+  var m=lastResult.matched, d=lastResult.dp;
+  var txt='แบบทดสอบ "คุณส่งคลิปให้ใครบ่อยแค่ไหน?"\n'
+        +'ฉันได้ผลลัพธ์: '+m.emoji+' '+m.name+' ('+d+'%)\n'
+        +'"'+m.desc+'"';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ showToast(); });
+  } else {
+    var ta=document.createElement('textarea');
+    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    showToast();
+  }
+}
+
+function showToast(){
+  var el=document.getElementById('toast');
+  el.className='toast show';
+  setTimeout(function(){ el.className='toast'; },2000);
+}
+
+function restartQuiz(){
+  score={F:0,T:0,R:0}; cur=0; locked=false; ansHistory=[];
+  document.getElementById('ring-fill').style.strokeDashoffset='220';
+  document.getElementById('bar-f').style.width='0%';
+  document.getElementById('bar-t').style.width='0%';
+  document.getElementById('bar-r').style.width='0%';
+  transitionTo('s-result','s-start','back');
+}
+</script>
+</body>
+</html>
